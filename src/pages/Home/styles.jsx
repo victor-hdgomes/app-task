@@ -79,6 +79,20 @@ const styles = StyleSheet.create({
     },
     buttonCreate: {
         textDecorationLine: 'underline'
+    },
+    buttonLogout: {
+        position: "absolute",
+        width: 60,
+        height: 60,
+        bottom: 30,
+        left: 20,
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+    iconButtonLogout: {
+        color: "#fff",
+        fontSize: 25,
+        fontWeight: "bold"
     }
 })
 

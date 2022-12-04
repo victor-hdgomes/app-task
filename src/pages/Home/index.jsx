@@ -1,4 +1,4 @@
-import database from '../../config/firebaseconfig'
+import firebase from '../../config/firebaseconfig'
 
 import { View, Text, TouchableOpacity, FlatList, Animated } from 'react-native'
 
@@ -6,16 +6,26 @@ import { useEffect, useState } from 'react'
 
 import styles from './styles'
 
-import { Entypo, Ionicons, Feather } from '@expo/vector-icons'
+import { Entypo, Ionicons, Feather, MaterialCommunityIcons } from '@expo/vector-icons'
 
 import Swipeable from 'react-native-gesture-handler/Swipeable'
 
-export default function Home({ navigation }) {
+export default function Home({ navigation, route }) {
 
     const [task, setTask] = useState([])
 
+    const database = firebase.firestore();
+
+    function logout() {
+        firebase.auth().signOut().then(() => {
+            navigation.navigate("Login")
+        }).catch((error) => {
+
+        });
+    }
+
     useEffect(() => {
-        database.collection("tasks").onSnapshot((query) => {
+        database.collection(route.params.idUser).onSnapshot((query) => {
             const list = []
             query.forEach(doc => {
                 list.push({ ...doc.data(), id: doc.id })
@@ -43,23 +53,23 @@ export default function Home({ navigation }) {
 
     async function deleteTask(id) {
 
-        await database.collection("tasks").doc(id).delete()
+        await database.collection(route.params.idUser).doc(id).delete()
 
     }
 
     async function check(item) {
         if (item.status) {
-            await database.collection('tasks').doc(item.id).set({ id: item.id, description: item.description, status: false })
+            await database.collection(route.params.idUser).doc(item.id).set({ id: item.id, description: item.description, status: false })
         } else {
-            await database.collection('tasks').doc(item.id).set({ id: item.id, description: item.description, status: true })
+            await database.collection(route.params.idUser).doc(item.id).set({ id: item.id, description: item.description, status: true })
         }
     }
 
     function description(item) {
         if (!item.status) {
-            return (<Text style={styles.descriptionTask} onPress={() => navigation.navigate('Details', { id: item.id, description: item.description })} >{item.description}</Text>)
+            return (<Text style={styles.descriptionTask} onPress={() => navigation.navigate('Details', { id: item.id, description: item.description, idUser: route.params.idUser })} >{item.description}</Text>)
         } else {
-            return (<Text style={styles.descriptionTaskChecked} onPress={() => navigation.navigate('Details', { id: item.id, description: item.description })} >{item.description}</Text>)
+            return (<Text style={styles.descriptionTaskChecked} onPress={() => navigation.navigate('Details', { id: item.id, description: item.description, idUser: route.params.idUser })} >{item.description}</Text>)
         }
     }
 
@@ -75,11 +85,11 @@ export default function Home({ navigation }) {
         return (
             <Swipeable renderLeftActions={leftActions} onSwipeableLeftOpen={(e) => deleteTask(item.id)}>
                 <View style={styles.tasks}>
-                    <TouchableOpacity style={styles.deleteTask} onPress={() => check(item)}>
-                        {changeIcon(item.status)}
+                    <TouchableOpacity style={styles.deleteTask} onPress={() => check(item, route.params.idUser)}>
+                        {changeIcon(item.status, route.params.idUser )}
                     </TouchableOpacity>
 
-                    {description(item)}
+                    {description(item, route.params.idUser)}
                 </View>
             </Swipeable>
         )
@@ -91,8 +101,14 @@ export default function Home({ navigation }) {
 
             <FlatList showsVerticalScrollIndicator={false} data={task} renderItem={renderItem} keyExtractor={item => item.id} />
 
-            <TouchableOpacity style={styles.buttonNewTask} onPress={() => navigation.navigate("New Task")}>
+            <TouchableOpacity style={styles.buttonNewTask} onPress={() => navigation.navigate("New Task", { idUser: route.params.idUser })}>
                 <Text style={styles.iconButton}><Feather name="plus" size={24} color="#222222" /></Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.buttonLogout} onPress={() => logout()}>
+                <Text style={styles.iconButtonLogout}>
+                    <MaterialCommunityIcons name="location-exit" size={23} color="#00E0FF" />
+                </Text>
             </TouchableOpacity>
 
         </View>
